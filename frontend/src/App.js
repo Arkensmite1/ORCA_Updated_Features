@@ -15,9 +15,11 @@ import { Emergency, Rescue, SosConfirm } from "./screens/Emergency";
 import { History, Profile, Settings, Demo } from "./screens/Profile";
 import OfflineCenter from "./screens/OfflineCenter";
 import { Toaster } from "./components/ui/sonner";
+import { OfflineProvider } from "./offline/OfflineContext";
 
 function App() {
   return (
+    <OfflineProvider>
     <AppProvider>
       <Toaster position="top-center" />
       <AppShell>
@@ -48,6 +50,7 @@ function App() {
         <Sheets />
       </AppShell>
     </AppProvider>
+    </OfflineProvider>
   );
 }
 

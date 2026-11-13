@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { useOffline } from "../offline/OfflineContext";
+import { cachedTileLayer } from "../offline/tiles";
 
 // ---- Ratnagiri coast (Arabian Sea) demo geography ----
 export const GEO = {
@@ -24,8 +26,8 @@ const TILES = {
     labels: "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
   },
   nautical: {
-    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    attr: "OpenStreetMap",
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+    attr: "Esri World Street Map",
   },
 };
 
@@ -46,6 +48,35 @@ const ICON = {
   rescue: '<svg viewBox="0 0 24 24" width="11" height="11" fill="#fff"><path d="M11 3h2v6h6v2h-6v6h-2v-6H5V9h6V3z"/></svg>',
 };
 
+const DEMO_LAYERS = {
+  PFZ: (g, addMarker) => [GEO.zoneA, GEO.zoneB, GEO.zoneC].forEach((z) => {
+    L.circle(z, { radius: 2600, color: "#2BAE73", weight: 1.5, fillColor: "#2BAE73", fillOpacity: 0.18 }).addTo(g);
+    addMarker(z, "#2BAE73", ICON.fish);
+  }),
+  Waves: (g) => [[16.98, 73.18, 0.22], [17.06, 73.15, 0.34], [16.9, 73.12, 0.16]].forEach(([la, ln, op]) =>
+    L.circle([la, ln], { radius: 3200, color: "#146FAE", weight: 0, fillColor: "#146FAE", fillOpacity: op }).addTo(g)),
+  SST: (g) => [["#EF5B57", 17.08, 73.14], ["#F0803F", 16.98, 73.18], ["#EFB223", 16.9, 73.24], ["#2BAE73", 17.14, 73.28]].forEach(([c, la, ln]) =>
+    L.circle([la, ln], { radius: 3000, color: c, weight: 0, fillColor: c, fillOpacity: 0.28 }).addTo(g)),
+};
+
+// Draws cached safety layers and the real GPS fix; nothing is drawn for the boat when there is no fix.
+function drawLive(g, addMarker, ds, fix) {
+  if (ds) {
+    L.polyline(ds.coastline, { color: "#0B3C61", weight: 1.5, opacity: 0.6 }).addTo(g);
+    L.polyline(ds.route.points, { color: "#0B3C61", weight: 3, dashArray: "6 8" }).bindTooltip(ds.route.name).addTo(g);
+    ds.restricted.forEach((z) => L.polygon(z.polygon, { color: "#EF5B57", weight: 2, dashArray: "6 6", fillColor: "#EF5B57", fillOpacity: 0.12 }).bindTooltip(z.name).addTo(g));
+    ds.hazards.forEach((h) => {
+      L.circle([h.lat, h.lng], { radius: h.radius_km * 1000, color: "#EF5B57", weight: 1, fillColor: "#EF5B57", fillOpacity: 0.1 }).addTo(g);
+      addMarker([h.lat, h.lng], "#EF5B57", ICON.warn).bindTooltip(h.name);
+    });
+    ds.harbors.forEach((h) => addMarker([h.lat, h.lng], "#F2A93B", ICON.anchor).bindTooltip(h.name));
+  }
+  if (fix) {
+    L.circle([fix.lat, fix.lng], { radius: Math.min(fix.accuracy || 30, 2000), color: "#146FAE", weight: 1, fillOpacity: 0.08 }).addTo(g);
+    addMarker([fix.lat, fix.lng], "#146FAE", ICON.boat, { pulse: true }).bindTooltip("You (GPS)");
+  }
+}
+
 export default function LeafletMap({
   variant = "full",
   activeLayer = "Route",
@@ -53,7 +84,11 @@ export default function LeafletMap({
   height = 190,
   interactive = true,
   radius = false,
+  live = false,
 }) {
+  const { gps, datasets } = useOffline();
+  const fix = gps.fix;
+  const centered = useRef(false);
   const elRef = useRef(null);
   const mapRef = useRef(null);
   const baseRef = useRef(null);
@@ -75,7 +110,7 @@ export default function LeafletMap({
       center: focus.c,
       zoom: focus.z,
       zoomControl: interactive && variant === "full",
-      attributionControl: false,
+      attributionControl: true,
       dragging: interactive,
       scrollWheelZoom: false,
       doubleClickZoom: interactive,
@@ -95,8 +130,13 @@ export default function LeafletMap({
     if (!map) return;
     if (baseRef.current) map.removeLayer(baseRef.current);
     if (labelRef.current) { map.removeLayer(labelRef.current); labelRef.current = null; }
+    if (base === "chart") {
+      baseRef.current = cachedTileLayer("street").addTo(map);
+      labelRef.current = cachedTileLayer("seamark").addTo(map);
+      return;
+    }
     const t = TILES[base] || TILES.satellite;
-    baseRef.current = L.tileLayer(t.url, { maxZoom: 18 }).addTo(map);
+    baseRef.current = L.tileLayer(t.url, { maxZoom: 18, attribution: t.attr }).addTo(map);
     if (t.labels) {
       labelRef.current = L.tileLayer(t.labels, { maxZoom: 18, opacity: 0.9 }).addTo(map);
     }
@@ -112,8 +152,15 @@ export default function LeafletMap({
     const addMarker = (pos, color, glyph, opts = {}) =>
       L.marker(pos, { icon: pin(color, glyph, opts.pulse) }).addTo(g);
 
-    // Always: user boat
-    addMarker(GEO.user, "#146FAE", ICON.boat, { pulse: true });
+    if (live) {
+      drawLive(g, addMarker, datasets, fix);
+      if (fix && !centered.current) { centered.current = true; map.setView([fix.lat, fix.lng], Math.max(map.getZoom(), 12)); }
+      if (DEMO_LAYERS[activeLayer]) DEMO_LAYERS[activeLayer](g, addMarker);
+      return;
+    }
+
+    // Always: user boat (real GPS fix when available)
+    addMarker(fix ? [fix.lat, fix.lng] : GEO.user, "#146FAE", ICON.boat, { pulse: true });
 
     if (variant === "geofence") {
       L.polygon(GEO.restricted, {
@@ -175,7 +222,7 @@ export default function LeafletMap({
         break;
     }
     if (radius) L.circle(GEO.user, { radius: 1500, color: "#146FAE", weight: 1, dashArray: "4 6", fillOpacity: 0.04 }).addTo(g);
-  }, [activeLayer, variant, radius]);
+  }, [activeLayer, variant, radius, live, datasets, fix]);
 
-  return <div ref={elRef} className="leaflet-shell" style={{ height, width: "100%" }} />;
+  return <div ref={elRef} className="leaflet-shell" data-testid={`leaflet-map-${variant}${live ? "-live" : ""}`} style={{ height, width: "100%" }} />;
 }

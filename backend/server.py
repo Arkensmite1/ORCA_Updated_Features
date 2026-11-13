@@ -11,6 +11,7 @@ from typing import Optional
 from datetime import datetime, timezone
 
 import agents
+import offline_safety
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -525,6 +526,7 @@ async def delete_contact(contact_id: str):
 
 
 app.include_router(api)
+app.include_router(offline_safety.build_router(db, now_iso))
 
 _cors_env = os.environ.get("CORS_ORIGINS", "*")
 _cors_origins = ["*"] if _cors_env.strip() == "*" else [o.strip() for o in _cors_env.split(",") if o.strip()]

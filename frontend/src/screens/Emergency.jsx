@@ -4,6 +4,7 @@ import { useApp } from "../context/AppContext";
 import { Badge, Icon, Tag, TopBar } from "../components/Shared";
 import LeafletMap from "../components/LeafletMap";
 import { emergencyTypes } from "../mock";
+import { useOffline } from "../offline/OfflineContext";
 
 const HOLD_MS = 3000;
 const CIRC = 427;
@@ -83,6 +84,9 @@ export function SosConfirm() {
 export function Emergency() {
   const { go, toggleSheet, sosType, t, emergency, contactEmergencyService, shareLocation } = useApp();
   const e = emergency;
+  const { gps, outbox } = useOffline();
+  const latest = outbox[0];
+  const SOS_TEXT = { QUEUED: ["orange", "Stored on device — waiting for signal"], TRANSMITTED: ["yellow", "Transmitted — awaiting receipt"], ACKNOWLEDGED: ["green", "Received by ORCA server"] };
   return (
     <Screen id="emergency">
       <TopBar
@@ -94,8 +98,14 @@ export function Emergency() {
         <LeafletMap variant="emergency" height={140} />
         <div className="card section-gap">
           <div className="txt-xs">Latest known position</div>
-          <div className="txt-sm coord" style={{ fontWeight: 700, color: "var(--ink)", marginTop: 2 }}>{e.position}</div>
+          <div className="txt-sm coord" data-testid="emergency-position" style={{ fontWeight: 700, color: "var(--ink)", marginTop: 2 }}>{gps.fix ? `${gps.fix.lat.toFixed(4)}°, ${gps.fix.lng.toFixed(4)}° (GPS ±${Math.round(gps.fix.accuracy)} m)` : e.position}</div>
         </div>
+        {latest && (
+          <div className="card" data-testid="emergency-outbox-status">
+            <div className="row"><span className="eyebrow-sm">Store & forward</span><Badge tone={SOS_TEXT[latest.status][0]}>{latest.status}</Badge></div>
+            <div className="txt-xs" style={{ marginTop: 6 }}>{SOS_TEXT[latest.status][1]} · ID {latest.emergency_id.slice(0, 8)} · {latest.attempts} attempt{latest.attempts === 1 ? "" : "s"}{latest.ack ? ` · ${latest.ack.ack_id}` : ""}</div>
+          </div>
+        )}
         <div className="row" style={{ gap: 9, marginTop: 10 }}>
           <div className="card" style={{ flex: 1 }}>
             <div className="txt-xs">People onboard</div>

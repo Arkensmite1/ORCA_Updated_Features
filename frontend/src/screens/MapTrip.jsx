@@ -4,11 +4,15 @@ import { useApp } from "../context/AppContext";
 import { Badge, Icon, TopBar } from "../components/Shared";
 import LeafletMap from "../components/LeafletMap";
 import { activeTrip, mapLayers, scenarioConditions } from "../mock";
+import { useOffline } from "../offline/OfflineContext";
+import { fmtDuration, fmtKm } from "../offline/geo";
 
 export function MapScreen() {
   const { go, toggleSheet, t } = useApp();
   const [layer, setLayer] = useState("Route");
-  const [base, setBase] = useState("satellite");
+  const [base, setBase] = useState("chart");
+  const { safety, gps } = useOffline();
+  const h = safety.harbor;
   return (
     <Screen id="map">
       <TopBar
@@ -16,7 +20,7 @@ export function MapScreen() {
         right={<div className="iconbtn" onClick={() => toggleSheet("layers", true)}><Icon.layers /></div>}
       />
       <div style={{ position: "relative", height: "calc(100% - 62px)" }}>
-        <LeafletMap variant="full" activeLayer={layer} base={base} height="100%" interactive radius />
+        <LeafletMap variant="full" live activeLayer={layer} base={base} height="100%" interactive />
         <div className="map-float" style={{ top: 12, left: 12, right: 12 }}>
           <div className="scrollx">
             {mapLayers.map((l) => (
@@ -26,9 +30,10 @@ export function MapScreen() {
         </div>
         <div className="map-float" style={{ top: 56, right: 12 }}>
           <div style={{ display: "flex", background: "#fff", border: "1px solid var(--line)", borderRadius: 11, padding: 3, boxShadow: "var(--shadow-card)" }}>
-            {["satellite", "nautical"].map((b) => (
+            {["chart", "satellite"].map((b) => (
               <span
                 key={b}
+                data-testid={`map-base-${b}`}
                 onClick={() => setBase(b)}
                 style={{ fontSize: 10, fontWeight: 700, padding: "6px 10px", borderRadius: 8, cursor: "pointer", textTransform: "capitalize",
                   background: base === b ? "var(--teal)" : "transparent", color: base === b ? "#fff" : "var(--ink-soft)" }}
@@ -40,11 +45,11 @@ export function MapScreen() {
           <div className="row">
             <div className="col">
               <span className="eyebrow-sm">Nearest safe location</span>
-              <span className="txt-sm" style={{ fontWeight: 700, color: "var(--ink)" }}>Ratnagiri Harbour</span>
+              <span className="txt-sm" data-testid="map-nearest-harbor" style={{ fontWeight: 700, color: "var(--ink)" }}>{h ? h.name : gps.fix ? "Download trip kit" : "Waiting for GPS fix"}</span>
             </div>
-            <span className="txt-xs" style={{ textAlign: "right" }}>4.2 km<br />~22 min</span>
+            <span className="txt-xs" data-testid="map-nearest-harbor-distance" style={{ textAlign: "right" }}>{h ? <>{fmtKm(h.distanceKm)}<br />~{fmtDuration(h.etaMin)}</> : "—"}</span>
           </div>
-          <div className="txt-xs" style={{ marginTop: 6 }}>Active layer: <b style={{ color: "var(--teal-deep)" }}>{layer}</b> · SIM layers are always tagged, never mixed with REAL data</div>
+          <div className="txt-xs" style={{ marginTop: 6 }}>Active layer: <b style={{ color: "var(--teal-deep)" }}>{layer}</b> · {base === "chart" ? "Chart uses tiles saved on this device when offline" : "Satellite needs internet"} · harbors & boundaries are UNVERIFIED SAMPLE data; PFZ/Waves/SST are SIM</div>
         </div>
         <div className="map-float" style={{ bottom: 14, left: 12, right: 12, display: "flex", gap: 8, paddingRight: 56 }}>
           <button className="btn ghost sm" onClick={() => go("trip")}>{t("btn_active_trip")}</button>

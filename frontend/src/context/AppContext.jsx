@@ -4,6 +4,7 @@ import { chatSeed, mockOrcaReply, agentSteps, communityPostsSeed, pollSeed, scen
 import api from "../api";
 import { translations, LANG_CODE } from "../i18n";
 import { toast } from "../components/ui/sonner";
+import { useOffline } from "../offline/OfflineContext";
 
 const AppContext = createContext(null);
 
@@ -52,6 +53,7 @@ export function AppProvider({ children }) {
   const [emergency, setEmergency] = useState(emergencyInfo);
   const [offlineSnapshot, setOfflineSnapshot] = useState({ freshness: "NOT_CACHED", layers: [], queue_count: 0 });
   const [offlineQueue, setOfflineQueue] = useState([]);
+  const { queueSos: storeSos } = useOffline();
 
   // ---- load conditions + community whenever scenario changes ----
   useEffect(() => {
@@ -165,10 +167,12 @@ export function AppProvider({ children }) {
 
   const triggerSos = useCallback(async () => {
     setScenario("RED");
+    // Store-and-forward first: the SOS is on the device before any network call.
+    storeSos({ type: sosType, people: 3, details: "Hold-to-send SOS", vesselName: profile.vessel });
     const em = await api.sos(sosType, 3, "RED");
     if (em) { setEmergencyId(em.id); setEmergency(em); }
     else setEmergency((e) => ({ ...e, type: sosType }));
-  }, [sosType]);
+  }, [sosType, storeSos, profile.vessel]);
 
   const cancelSos = useCallback(async () => {
     if (emergencyId) await api.cancelEmergency(emergencyId);
