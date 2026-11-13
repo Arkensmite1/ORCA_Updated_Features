@@ -45,6 +45,10 @@ export const api = {
   addContact: (name, phone, role) => safe(client.post("/contacts", { name, phone, role })),
   deleteContact: (id) => safe(client.delete(`/contacts/${id}`)),
   reportPost: (id, reason) => safe(client.post(`/community/posts/${id}/report`, { reason })),
+  offlineSnapshot: () => safe(client.get("/offline/snapshot")),
+  cacheOffline: (area, layers) => safe(client.post("/offline/cache", { area, layers })),
+  offlineQueue: () => safe(client.get("/offline/sos-queue")),
+  queueOfflineSos: (payload) => safe(client.post("/offline/sos-queue", payload)),
 };
 
 export default api;

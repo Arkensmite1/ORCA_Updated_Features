@@ -11,7 +11,7 @@ export const LANG_CODE = {
 
 export const translations = {
   en: {
-    nav_home: "Home", nav_plan: "Plan", nav_map: "Map", nav_community: "Community", nav_profile: "Profile",
+    nav_home: "Home", nav_plan: "Plan", nav_offline: "Offline", nav_map: "Map", nav_community: "Community", nav_profile: "Profile",
     namaste: "Namaste,",
     marine_conditions: "Marine conditions", wind: "Wind", waves: "Waves", alerts: "Alerts",
     ask_orca: "Ask ORCA anything", ask_placeholder: "Can I go fishing tomorrow?",
@@ -47,7 +47,7 @@ export const translations = {
     seg_feed: "Feed", seg_polls: "Polls",
   },
   hi: {
-    nav_home: "होम", nav_plan: "योजना", nav_map: "मैप", nav_community: "समुदाय", nav_profile: "प्रोफ़ाइल",
+    nav_home: "होम", nav_plan: "योजना", nav_offline: "ऑफ़लाइन", nav_map: "मैप", nav_community: "समुदाय", nav_profile: "प्रोफ़ाइल",
     namaste: "नमस्ते,",
     marine_conditions: "समुद्री स्थिति", wind: "हवा", waves: "लहरें", alerts: "अलर्ट",
     ask_orca: "ORCA से कुछ भी पूछें", ask_placeholder: "क्या मैं कल मछली पकड़ने जा सकता हूँ?",
@@ -83,7 +83,7 @@ export const translations = {
     seg_feed: "फ़ीड", seg_polls: "पोल",
   },
   mr: {
-    nav_home: "होम", nav_plan: "योजना", nav_map: "नकाशा", nav_community: "समुदाय", nav_profile: "प्रोफाइल",
+    nav_home: "होम", nav_plan: "योजना", nav_offline: "ऑफलाइन", nav_map: "नकाशा", nav_community: "समुदाय", nav_profile: "प्रोफाइल",
     namaste: "नमस्कार,",
     marine_conditions: "सागरी परिस्थिती", wind: "वारा", waves: "लाटा", alerts: "सूचना",
     ask_orca: "ORCA ला काहीही विचारा", ask_placeholder: "उद्याच्या सकाळी मासेमारीला जावे का?",
@@ -119,7 +119,7 @@ export const translations = {
     seg_feed: "फीड", seg_polls: "पोल",
   },
   ta: {
-    nav_home: "முகப்பு", nav_plan: "திட்டம்", nav_map: "வரைபடம்", nav_community: "சமூகம்", nav_profile: "சுயவிவரம்",
+    nav_home: "முகப்பு", nav_plan: "திட்டம்", nav_offline: "ஆஃப்லைன்", nav_map: "வரைபடம்", nav_community: "சமூகம்", nav_profile: "சுயவிவரம்",
     namaste: "வணக்கம்,",
     marine_conditions: "கடல் நிலைமைகள்", wind: "காற்று", waves: "அலைகள்", alerts: "எச்சரிக்கைகள்",
     ask_orca: "ORCA-விடம் எதுவும் கேளுங்கள்", ask_placeholder: "நாளை காலை மீன்பிடிக்கலாமா?",
@@ -155,7 +155,7 @@ export const translations = {
     seg_feed: "ஃபீடு", seg_polls: "வாக்கெடுப்பு",
   },
   bn: {
-    nav_home: "হোম", nav_plan: "পরিকল্পনা", nav_map: "মানচিত্র", nav_community: "কমিউনিটি", nav_profile: "প্রোফাইল",
+    nav_home: "হোম", nav_plan: "পরিকল্পনা", nav_offline: "অফলাইন", nav_map: "মানচিত্র", nav_community: "কমিউনিটি", nav_profile: "প্রোফাইল",
     namaste: "নমস্কার,",
     marine_conditions: "সামুদ্রিক অবস্থা", wind: "বাতাস", waves: "ঢেউ", alerts: "সতর্কতা",
     ask_orca: "ORCA-কে যেকোনো কিছু জিজ্ঞাসা করুন", ask_placeholder: "কাল সকালে মাছ ধরতে যাব কি?",

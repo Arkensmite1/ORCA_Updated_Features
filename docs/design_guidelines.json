@@ -1,0 +1,54 @@
+{
+  "typography": {
+    "font_family": "Chivo, IBM Plex Mono, sans-serif",
+    "headings": "Chivo, font-bold tracking-tight text-slate-900 dark:text-slate-100",
+    "body": "Inter, sans-serif",
+    "mono": "IBM Plex Mono, monospace"
+  },
+  "colors": {
+    "primary": "#0A2540",
+    "accent": "#00D4B6",
+    "warning": "#FF3B30",
+    "safe": "#34C759",
+    "background": "#0F172A",
+    "surface": "#1E293B"
+  },
+  "visual_enhancers": [
+    "glassmorphism",
+    "sonar-pulse-animations",
+    "offline-indicator-badges",
+    "store-and-forward-queue-glow"
+  ],
+  "grids": {
+    "dashboard_mode": "High Density Grid (grid-cols-1 md:grid-cols-4 gap-6)"
+  },
+  "layouts": [
+    "Three-Layer Offline Safety Command Center",
+    "Pre-Trip Download & Spatial Caching Hub",
+    "On-Device GNSS & Route Deviation Cockpit",
+    "Store-and-Forward SOS Emergency Queue & Satellite Link"
+  ],
+  "motion": {
+    "library": "framer-motion",
+    "transition": "transition: transform 0.2s ease, opacity 0.2s ease"
+  },
+  "accessibility": {
+    "standards": "WCAG AA, APCA contrast compliant, prefers-reduced-motion respected",
+    "test_ids": "All interactive elements include data-testid attributes"
+  },
+  "media": [],
+  "3d_libraries": [
+    "lucide-react",
+    "recharts",
+    "leaflet / react-leaflet for offline nautical maps & geofencing"
+  ],
+  "image_urls": [],
+  "instructions_to_main_agent": "Build the ORCA Offline Marine Safety System with 3 layers: Layer 1 (Pre-trip caching of charts, hazards, safe harbors, SQLite/GeoPackage simulator), Layer 2 (On-device GNSS positioning, speed, heading, distance from shore, geofencing & route deviation alerts), Layer 3 (Store-and-forward SOS emergency queue, satellite/VHF DSC messenger simulation, delivery acknowledgements & connectivity restoration sync). Ensure robust data-freshness indicators and field test simulation (airplane mode, GPS unavailable, expired forecasts). Use Tailwind CSS, Lucide icons, Sonner toasts, and comprehensive testids.",
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
+    "Never use universal transition: all",
+    "Always include data-testid on interactive elements",
+    "Never use pure black or pure white without tint",
+    "Ensure high contrast and accessible text colors on hover/focus",
+    "Keep interactive controls fully accessible with proper states"
+  ]
+}

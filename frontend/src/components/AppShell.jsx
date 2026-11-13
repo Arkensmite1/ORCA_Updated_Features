@@ -20,6 +20,10 @@ const sidebarItems = [
     svg: <path d="M9 3L3 6v15l6-3 6 3 6-3V3l-6 3-6-3z" />,
   },
   {
+    tab: "offline", label: "Offline safety", target: "offline",
+    svg: <><path d="M4 5h16v14H4z" /><path d="M8 9h8M8 13h5" /></>,
+  },
+  {
     tab: "plan", label: "7-day plan", target: "plan",
     svg: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></>,
   },
@@ -62,6 +66,7 @@ function Sidebar() {
           <button
             key={n.tab}
             data-tab={n.tab}
+            data-testid={`sidebar-nav-${n.tab}`}
             className={`dash-navitem ${activeTab === n.tab ? "active" : ""}`}
             onClick={() => go(n.target)}
           >
@@ -137,13 +142,14 @@ function DashTopbar() {
 function BottomNav() {
   const { go, navMap, screen, t } = useApp();
   const activeTab = navMap[screen];
-  const items = sidebarItems.filter((n) => ["home", "plan", "map", "community", "profile"].includes(n.tab));
+  const items = sidebarItems.filter((n) => ["home", "plan", "map", "offline", "community", "profile"].includes(n.tab));
   return (
     <nav className="bottomnav">
       {items.map((n) => (
         <button
           key={n.tab}
           data-tab={n.tab}
+          data-testid={`bottomnav-${n.tab}`}
           className={`navitem ${activeTab === n.tab ? "active" : ""}`}
           onClick={() => go(n.target)}
         >

@@ -13,6 +13,7 @@ import { Plan, Alerts } from "./screens/PlanAlerts";
 import Community from "./screens/Community";
 import { Emergency, Rescue, SosConfirm } from "./screens/Emergency";
 import { History, Profile, Settings, Demo } from "./screens/Profile";
+import OfflineCenter from "./screens/OfflineCenter";
 import { Toaster } from "./components/ui/sonner";
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
         <Profile />
         <Settings />
         <Demo />
+        <OfflineCenter />
         <Sheets />
       </AppShell>
     </AppProvider>

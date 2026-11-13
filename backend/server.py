@@ -81,6 +81,18 @@ class ProfileIn(BaseModel):
     contact: Optional[str] = None
     homePort: Optional[str] = None
 
+class OfflineCacheIn(BaseModel):
+    area: str = "Ratnagiri coast"
+    layers: list[str] = []
+
+class OfflineSosIn(BaseModel):
+    type: str = "Engine failure"
+    people: int = 1
+    lat: Optional[float] = None
+    lng: Optional[float] = None
+    vessel: str = "Small motorboat"
+    details: str = ""
+
 
 # --------------------------- Seed data ---------------------------
 SEED_PLAN = [
@@ -452,6 +464,42 @@ async def update_profile(body: ProfileIn):
 @api.get("/data-sources")
 async def data_sources():
     return DATA_SOURCES
+
+@api.get("/offline/snapshot")
+async def offline_snapshot():
+    cached = await db.offline_cache.find_one({"id": "primary"}, {"_id": 0})
+    queue_count = await db.offline_sos.count_documents({"status": {"$in": ["QUEUED_OFFLINE", "RETRY_PENDING"]}})
+    return {"area": (cached or {}).get("area", "Ratnagiri coast"), "layers": (cached or {}).get("layers", []),
+            "cached_at": (cached or {}).get("cached_at"), "freshness": "CACHED" if cached else "NOT_CACHED",
+            "queue_count": queue_count, "coverage": "DEMO FALLBACK" if not cached else "LOCAL CACHE",
+            "source_note": "Offline layers are demo fallback data until verified marine chart providers are connected."}
+
+@api.post("/offline/cache")
+async def cache_offline_data(body: OfflineCacheIn):
+    layers = body.layers or ["Coastline", "Hazards", "Safe harbors", "Forecast", "Restricted areas"]
+    doc = {"id": "primary", "area": body.area, "layers": layers, "cached_at": now_iso(), "provider": "SIMULATION"}
+    await db.offline_cache.replace_one({"id": "primary"}, doc, upsert=True)
+    return {**doc, "freshness": "CACHED", "coverage": "DEMO FALLBACK"}
+
+@api.get("/offline/sos-queue")
+async def offline_sos_queue():
+    return await db.offline_sos.find({}, {"_id": 0}).sort("created_at", -1).to_list(50)
+
+@api.post("/offline/sos-queue")
+async def queue_offline_sos(body: OfflineSosIn):
+    item = {"id": "offline-" + uuid.uuid4().hex[:10], "type": body.type, "people": body.people,
+            "position": {"lat": body.lat, "lng": body.lng}, "vessel": body.vessel, "details": body.details,
+            "created_at": now_iso(), "status": "QUEUED_OFFLINE",
+            "acknowledgement": "Awaiting a communication link. ORCA cannot guarantee delivery from a phone alone."}
+    await db.offline_sos.insert_one(item)
+    return clean(item)
+
+@api.post("/offline/sos-queue/{item_id}/retry")
+async def retry_offline_sos(item_id: str):
+    result = await db.offline_sos.update_one({"id": item_id}, {"$set": {"status": "RETRY_PENDING"}})
+    if result.matched_count == 0:
+        raise HTTPException(404, "queued SOS not found")
+    return await db.offline_sos.find_one({"id": item_id}, {"_id": 0})
 
 
 @api.get("/contacts")

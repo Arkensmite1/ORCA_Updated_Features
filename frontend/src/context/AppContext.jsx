@@ -11,7 +11,7 @@ const navMap = {
   home: "home", chat: "home", map: "map", trip: "home", plan: "plan",
   alerts: "home", community: "community", emergency: null, rescue: null,
   history: "profile", profile: "profile", settings: "profile",
-  risk: "home", trace: "home", geofence: null, sosconfirm: null, demo: "profile",
+  risk: "home", trace: "home", geofence: null, sosconfirm: null, demo: "profile", offline: "offline",
 };
 const noChromeScreens = ["landing", "splash", "onboard1", "onboard2", "onboard3", "login", "sosconfirm"];
 const noFabScreens = ["emergency", "rescue", "geofence"];
@@ -50,6 +50,8 @@ export function AppProvider({ children }) {
 
   const [contacts, setContacts] = useState(emergencyContactsSeed.map((c, i) => ({ id: "seed" + i, ...c })));
   const [emergency, setEmergency] = useState(emergencyInfo);
+  const [offlineSnapshot, setOfflineSnapshot] = useState({ freshness: "NOT_CACHED", layers: [], queue_count: 0 });
+  const [offlineQueue, setOfflineQueue] = useState([]);
 
   // ---- load conditions + community whenever scenario changes ----
   useEffect(() => {
@@ -74,6 +76,15 @@ export function AppProvider({ children }) {
       const cts = await api.contacts();
       if (cts && cts.length) setContacts(cts);
     })();
+  }, []);
+
+  useEffect(() => {
+    let alive = true;
+    Promise.all([api.offlineSnapshot(), api.offlineQueue()]).then(([snapshot, queue]) => {
+      if (alive && snapshot) setOfflineSnapshot(snapshot);
+      if (alive && queue) setOfflineQueue(queue);
+    });
+    return () => { alive = false; };
   }, []);
 
   const go = useCallback((name) => { setSheet(null); setScreen(name); }, []);
@@ -245,6 +256,18 @@ export function AppProvider({ children }) {
     setSettings((s) => ({ ...s, [key]: value }));
   }, []);
 
+  const cacheOffline = useCallback(async (area, layers) => {
+    const saved = await api.cacheOffline(area, layers);
+    if (saved) setOfflineSnapshot((cur) => ({ ...cur, ...saved }));
+    return saved;
+  }, []);
+
+  const queueOfflineSos = useCallback(async (payload) => {
+    const item = await api.queueOfflineSos(payload);
+    if (item) setOfflineQueue((cur) => [item, ...cur]);
+    return item;
+  }, []);
+
   // ---- i18n ----
   const langCode = LANG_CODE[settings.language] || "en";
   const t = useCallback((key) => {
@@ -276,12 +299,13 @@ export function AppProvider({ children }) {
     contactEmergencyService, shareLocation,
     contacts, loadContacts, addContact, deleteContact, callContact,
     summaryTrip, setSummaryTrip, endTrip,
+    offlineSnapshot, offlineQueue, cacheOffline, queueOfflineSos,
   }), [screen, go, sheet, toggleSheet, scenario, selectedScenarioId, runScenario, conditions,
        messages, agentBusy, agentStep, sendMessage, posts, addPost, markHelpful, reportPost, poll,
        pollVoted, votePoll, settings, updateSetting, profile, saveProfile, sosType,
        triggerSos, cancelSos, emergencyId, emergency, contactEmergencyService, shareLocation,
        contacts, loadContacts, addContact, deleteContact, callContact,
-       summaryTrip, endTrip, t, langCode, setLanguage]);
+       summaryTrip, endTrip, offlineSnapshot, offlineQueue, cacheOffline, queueOfflineSos, t, langCode, setLanguage]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

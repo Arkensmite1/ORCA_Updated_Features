@@ -69,6 +69,11 @@ export const Icon = {
       <path d="M3 12l9 5 9-5M3 17l9 5 9-5" />
     </svg>
   ),
+  download: (props) => (
+    <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+      <path d="M12 3v12M7 10l5 5 5-5M4 21h16" />
+    </svg>
+  ),
   close: (props) => (
     <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
       <path d="M18 6L6 18M6 6l12 12" />

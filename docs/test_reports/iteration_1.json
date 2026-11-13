@@ -1,0 +1,46 @@
+{
+  "summary": "Backend offline APIs passed 4/4 regression tests; desktop onboarding, command center, offline navigation, cache, limits, and SOS queue passed. Mobile onboarding completes, but Offline safety is not reachable because mobile hides the sidebar and bottom navigation omits Offline.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Mobile command-center navigation",
+        "issue": "After onboarding at 390px width, Offline safety has no visible navigation entry: sidebar is display:none and BottomNav only includes home/plan/map/community/profile. The offline center cannot be opened on mobile.",
+        "affected_selectors": [
+          "[data-tab=offline]",
+          ".bottomnav",
+          ".dash-sidebar"
+        ]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_offline.py",
+    "/app/test_reports/pytest/iteration_offline.xml"
+  ],
+  "action_items": [
+    "Add Offline safety to mobile bottom navigation or provide a mobile-accessible menu/shortcut; retest at 390px and 768px."
+  ],
+  "critical_code_review_comments": [
+    "OfflineCenter correctly labels DEMO FALLBACK/SIMULATION data and does not claim phone-only rescue delivery.",
+    "Frontend api.js correctly uses REACT_APP_BACKEND_URL; MongoDB _id fields are excluded from tested offline responses."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_offline.py",
+    "/app/test_reports/pytest/iteration_offline.xml"
+  ],
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "85%"
+  },
+  "seed_data_creation": "Created TEST-prefixed offline SOS records and updated the shared primary offline cache during API/UI testing; no seeded records were deleted because the API exposes no queue deletion endpoint.",
+  "retest_needed": true,
+  "should_call_test_agent_after_fix": true,
+  "context_for_next_testing_agent": "Desktop tested at 1920px and mobile at 390px. Desktop offline center and controls pass. Mobile onboarding passes through Continue to ORCA, then Offline nav is inaccessible. GPS rendered GPS UNAVAILABLE without crashing. Existing emergency SOS endpoint passed.",
+  "rca of the issue": "AppShell.jsx hides .dash-sidebar under max-width:860px, while BottomNav filters sidebarItems to home/plan/map/community/profile and excludes offline. Thus the Offline safety route exists in AppContext/navMap but has no mobile entry point. Add offline to mobile items or expose it via a menu."
+}
